@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Médico - Conteo de Insumos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white shadow-md py-6 px-4 sm:px-8">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Control de Inventario Médico</h1>
+                <p class="text-indigo-200 text-sm">Registro de conteo de insumos por enfermería</p>
+            </div>
+            <div id="current-date" class="text-xs bg-indigo-700 px-3 py-1.5 rounded-full font-medium tracking-wide shadow-inner">
+                <!-- Se rellena con JS -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl w-full mx-auto p-4 sm:p-8 flex-grow">
+        
+        <!-- Alerta de Notificación (Mensaje personalizado en lugar de alert) -->
+        <div id="notification" class="hidden mb-6 p-4 rounded-xl text-sm font-medium transition-all duration-300 shadow-sm flex items-center justify-between">
+            <span id="notification-text"></span>
+            <button onclick="hideNotification()" class="text-lg font-bold ml-4">&times;</button>
+        </div>
+
+        <form id="inventory-form" class="space-y-6">
+            
+            <!-- Selector de Enfermera -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <label for="nurse-select" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Seleccionar Enfermera Responsable
+                </label>
+                <div class="relative">
+                    <select id="nurse-select" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                        
+                    </select>
+                </div>
+            </div>
+
+            <!-- Listado de Productos Médicos -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-slate-800">Listado de Insumos y Productos</h2>
+                    <span class="text-xs font-medium bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md">Ingrese cantidades</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <th class="py-3 px-4">Código</th>
+                                <th class="py-3 px-4">Producto</th>
+                                <th class="py-3 px-4 text-right">Cantidad Contada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table-body" class="divide-y divide-slate-100">
+                            <!-- Los productos se cargan dinámicamente con JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Botón de Generación -->
+            <div class="flex justify-end">
+                <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-8 py-3.5 rounded-xl shadow-md transition transform active:scale-95 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    Generar Estructura JSON
+                </button>
+            </div>
+
+        </form>
+
+        <!-- Contenedor del Resultado JSON -->
+        <div id="json-result-container" class="hidden mt-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-800">Estructura JSON Generada</h3>
+                    <p class="text-xs text-slate-500">Datos listos para enviar a la API o exportar</p>
+                </div>
+                <button id="copy-btn" onclick="copyJsonToClipboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-xl text-sm transition flex items-center gap-1.5 border border-slate-300">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                    Copiar al Portapapeles
+                </button>
+            </div>
+            <pre id="json-output" class="bg-slate-900 text-emerald-400 p-4 rounded-xl text-xs sm:text-sm font-mono overflow-x-auto max-h-96"></pre>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 mt-12">
+        Sistema de Inventario Clínico &copy; 2026
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+       
+        let lastGeneratedJson = "";
+
+        // Inicializar la interfaz al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            setCurrentDate();
+        });
+
+        // Mostrar fecha y hora actual en el header
+        function setCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('es-ES', options);
+        }
+
+        // Manejar el envío del formulario y generación del JSON
+        document.getElementById('inventory-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const nurseSelect = document.getElementById('nurse-select');
+            const selectedNurse = nurseSelect.value;
+
+            if (!selectedNurse) {
+                showNotification("Por favor, seleccione una enfermera de la lista.", "error");
+                return;
+            }
+
+            // Recopilar datos de los inputs numéricos
+            const qtyInputs = document.querySelectorAll('.product-qty');
+            const items = [];
+
+            qtyInputs.forEach(input => {
+                items.push({
+                    codigo: input.getAttribute('data-code'),
+                    producto: input.getAttribute('data-name'),
+                    cantidad: parseInt(input.value) || 0
+                });
+            });
+
+            // Construir la estructura JSON principal
+            const reportData = {
+                enfermera: selectedNurse,
+                fecha_registro: new Date().toISOString(),
+                total_items_registrados: items.length,
+                inventario: items
+            };
+
+            lastGeneratedJson = JSON.stringify(reportData, null, 4);
+
+            // Mostrar el resultado en pantalla
+            document.getElementById('json-output').textContent = lastGeneratedJson;
+            const container = document.getElementById('json-result-container');
+            container.classList.remove('hidden');
+            
+            // Desplazarse suavemente hacia el JSON generado
+            container.scrollIntoView({ behavior: 'smooth' });
+            showNotification("¡Estructura JSON generada con éxito!", "success");
+        });
+
+        // Copiar JSON al portapapeles utilizando document.execCommand por seguridad en iframes
+        function copyJsonToClipboard() {
+            if (!lastGeneratedJson) return;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = lastGeneratedJson;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showNotification("¡JSON copiado al portapapeles correctamente!", "success");
+                } else {
+                    showNotification("No se pudo copiar el contenido.", "error");
+                }
+            } catch (err) {
+                showNotification("Error al intentar copiar al portapapeles.", "error");
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+        // Sistema de notificaciones personalizado (sin usar alert)
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            const text = document.getElementById('notification-text');
+            
+            text.textContent = message;
+            
+            if (type === "success") {
+                notification.className = "mb-6 p-4 rounded-xl text-sm font-medium shadow-sm flex items-center justify-between bg-emerald-50 text-emerald-800 border border-emerald-200";
+            } else {
+                notification.className = "mb-6 p-4 rounded-xl text-sm font-medium shadow-sm flex items-center justify-between bg-rose-50 text-rose-800 border border-rose-200";
+            }
+            
+            notification.classList.remove('hidden');
+
+            // Auto ocultar tras 4 segundos
+            setTimeout(() => {
+                hideNotification();
+            }, 4000);
+        }
+
+        function hideNotification() {
+            document.getElementById('notification').classList.add('hidden');
+        }
+
+        async function cargarDatosDesdeSheet() {
+            const urlAppScript = "https://script.google.com/macros/s/AKfycbzQs4Us_-2uo9lwYp0ouNVdUc6Zk6vnaq-YRQq1a0v7TFYGH890rFHw68-laipp_FQB/exec";
+            
+            try {
+                const respuesta = await fetch(urlAppScript);
+                const datos = await respuesta.json(); // { enfermeras: [...], productos: [...] }
+                
+                console.log(datos)
+                
+                const selectEnfermera = document.getElementById("nurse-select"); // ID de tu <select>
+                selectEnfermera.innerHTML = '<option value="">Seleccione una enfermera...</option>';
+                
+                datos.enfermeras.forEach((enfermera) => {
+                    const option = document.createElement('option');
+                    option.innerHTML = `
+                        <option value="${enfermera.codigo}">${enfermera.nombre}</option>
+                    `;
+                    selectEnfermera.appendChild(option);
+                });
+                
+               
+                const tbody = document.getElementById('products-table-body');
+                tbody.innerHTML = '';
+                datos.productos.forEach((item) => {                    
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition";
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 font-mono text-xs text-slate-500 font-medium">${item.codigo}</td>
+                        <td class="py-3 px-4 text-sm font-medium text-slate-700">${item.nombre}</td>
+                        <td class="py-3 px-4 text-right">
+                            <input type="number" min="0" value="0" data-code="${item.codigo}" data-name="${item.nombre}" 
+                                class="product-qty w-24 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-right font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (error) {
+                console.error("Error al sincronizar con Google Sheets:", error);
+            }
+        }
+
+document.addEventListener("DOMContentLoaded", cargarDatosDesdeSheet);
+    </script>
+</body>
+</html>
